@@ -2,6 +2,27 @@ var scene, camera, renderer;
 var cannon, cannonSphere;
 var windowWidth, windowHeight;
 var mouse, raycaster;
+var $$$;
+
+function Cash(position, rotation) {
+  this.startPosition = position;
+  this.startRotation = rotation;
+  this.mesh = null;
+}
+
+Cash.prototype.addToScene = function(scene) {
+  var geometry = new THREE.BoxGeometry(2.08, 0.01, 0.8);
+  var material = new THREE.MeshBasicMaterial({ color: 0xA4BD99, wireframe: false });
+  this.mesh = new THREE.Mesh(geometry, material);
+  this.mesh.position.copy(this.startPosition);
+  this.mesh.rotation.copy(this.startRotation);
+  this.mesh.translateX(-1);
+  scene.add(this.mesh);
+};
+
+Cash.prototype.update = function() {
+
+};
 
 document.addEventListener('DOMContentLoaded', function() {
   initScene();
@@ -22,10 +43,9 @@ function initScene() {
   scene.add(cannon);
 
   var geometry = new THREE.SphereGeometry(20, 20, 20);
-  geometry.translate(0, 0, 5);
+  geometry.translate(0, 0, 10);
   var material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true, side: THREE.BackSide });
   cannonSphere = new THREE.Mesh(geometry, material);
-  cannonSphere.visible = false;
   scene.add(cannonSphere);
 
   renderer = new THREE.WebGLRenderer();
@@ -41,6 +61,7 @@ function initScene() {
   mouse = new THREE.Vector2();
 
   window.addEventListener('mousemove', onMouseMove, false);
+  window.addEventListener('click', onMouseClick, false);
 }
 
 function createCannon() {
@@ -59,12 +80,6 @@ function createCannon() {
     cannon.add(new THREE.Mesh(geometry, cannonMaterial));
   };
   return cannon;
-}
-
-function createBill() {
-  var geometry = new THREE.BoxGeometry(2.61, 0.10, 6.14);
-  var material = new THREE.MeshBasicMaterial({ color: 0xA4BD99, wireframe: false });
-  return new THREE.Mesh(geometry, material);
 }
 
 function render() {
@@ -102,4 +117,12 @@ function onMouseMove(e) {
 
   mouse.x = (event.clientX/window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY/window.innerHeight) * 2 + 1;
+}
+
+function onMouseClick(e) {
+  e.preventDefault();
+
+  var $ = new Cash(cannon.position, cannon.rotation);
+  $.addToScene(scene);
+  $$$.push($);
 }
