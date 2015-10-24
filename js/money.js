@@ -1,27 +1,36 @@
 var scene, camera, renderer;
-var cannon, cannonSphere;
+var cannon, cannonSphere, cannonVelocity;
 var windowWidth, windowHeight;
 var mouse, raycaster;
-var $$$;
+var $$$ = [];
 
 function Cash(position, rotation) {
-  this.startPosition = position;
-  this.startRotation = rotation;
+  this.startPosition = position.clone();
+  this.startRotation = rotation.clone();
   this.mesh = null;
+  this.velocity = new THREE.Vector3(0, 0, 0);
 }
 
 Cash.prototype.addToScene = function(scene) {
   var geometry = new THREE.BoxGeometry(2.08, 0.01, 0.8);
-  var material = new THREE.MeshBasicMaterial({ color: 0xA4BD99, wireframe: false });
+  var material = new THREE.MeshPhongMaterial({ color: 0xA4BD99 });
   this.mesh = new THREE.Mesh(geometry, material);
   this.mesh.position.copy(this.startPosition);
   this.mesh.rotation.copy(this.startRotation);
   this.mesh.translateX(-1);
   scene.add(this.mesh);
+
+  this.mesh.updateMatrixWorld();
+  this.velocity = this.mesh.localToWorld(new THREE.Vector3(1, 0, 0));
+  this.velocity.setLength(0.5);
+  this.velocity.add(cannonVelocity);
+  console.log(this.velocity);
 };
 
-Cash.prototype.update = function() {
+Cash.prototype.update = function(t) {
+  this.velocity.y = this.velocity.y - 1 * t;
 
+  this.mesh.position.add(this.velocity);
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -41,6 +50,7 @@ function initScene() {
 
   cannon = createCannon();
   scene.add(cannon);
+  cannonVelocity = new THREE.Vector3(0, 0, 0);
 
   var geometry = new THREE.SphereGeometry(20, 20, 20);
   geometry.translate(0, 0, 10);
@@ -49,8 +59,8 @@ function initScene() {
   scene.add(cannonSphere);
 
   renderer = new THREE.WebGLRenderer();
-  renderer.setClearColor( 0xf0f0f0 );
-  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setClearColor(0xf0f0f0);
+  renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
@@ -89,9 +99,16 @@ function render() {
   var intersects = raycaster.intersectObject(cannonSphere, true);
   if (intersects.length > 0) {
     var intersect = intersects[ 0 ];
+    var pos = cannon.position.clone();
     cannon.position.copy(intersect.point);
     cannon.lookAt(cannonSphere.position);
     cannon.rotateOnAxis(new THREE.Vector3(0, 1, 0), -Math.PI/2);
+    cannonVelocity.subVectors(cannon.position, pos);
+  }
+
+  for (var i = 0; i < $$$.length; i++) {
+    var $ = $$$[i];
+    $.update(1.0 / 60.0);
   }
 
   if (window.innerWidth != windowWidth || window.innerHeight != windowHeight) {
