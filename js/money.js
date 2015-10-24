@@ -1,5 +1,5 @@
 var scene, camera, renderer;
-var cannon, cannonSphere, cannonVelocity;
+var cannon, cannonSphere, cannonVelocity, isFiring, fireCount;
 var windowWidth, windowHeight;
 var mouse, raycaster;
 var $$$ = [];
@@ -24,13 +24,16 @@ Cash.prototype.addToScene = function(scene) {
   this.velocity = this.mesh.localToWorld(new THREE.Vector3(1, 0, 0));
   this.velocity.setLength(0.5);
   this.velocity.add(cannonVelocity);
-  console.log(this.velocity);
 };
 
 Cash.prototype.update = function(t) {
   this.velocity.y = this.velocity.y - 1 * t;
 
   this.mesh.position.add(this.velocity);
+};
+
+Cash.prototype.destroy = function(scene) {
+  scene.remove(this.mesh);
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -46,14 +49,14 @@ function initScene() {
   scene.add(new THREE.HemisphereLight(0xffffbb, 0x080820, 1));
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
-  camera.position.z = 10;
+  camera.position.y = 5;
 
   cannon = createCannon();
   scene.add(cannon);
   cannonVelocity = new THREE.Vector3(0, 0, 0);
 
   var geometry = new THREE.SphereGeometry(20, 20, 20);
-  geometry.translate(0, 0, 10);
+  geometry.translate(0, 0, 0);
   var material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true, side: THREE.BackSide });
   cannonSphere = new THREE.Mesh(geometry, material);
   scene.add(cannonSphere);
@@ -71,7 +74,8 @@ function initScene() {
   mouse = new THREE.Vector2();
 
   window.addEventListener('mousemove', onMouseMove, false);
-  window.addEventListener('click', onMouseClick, false);
+  window.addEventListener('mousedown', onMouseDown, false);
+  window.addEventListener('mouseup', onMouseUp, false);
 }
 
 function createCannon() {
@@ -106,13 +110,30 @@ function render() {
     cannonVelocity.subVectors(cannon.position, pos);
   }
 
-  for (var i = 0; i < $$$.length; i++) {
+  for (var i = $$$.length - 1; i >= 0; i--) {
     var $ = $$$[i];
     $.update(1.0 / 60.0);
+
+    if ($.mesh.position.y < -80) {
+      $.destroy(scene);
+      $$$.splice(i, 1);
+    }
   }
+  console.log($$$.length);
 
   if (window.innerWidth != windowWidth || window.innerHeight != windowHeight) {
     resizeRenderer();  
+  }
+
+  if (isFiring) {
+    if (fireCount == 0) {
+      var $ = new Cash(cannon.position, cannon.rotation);
+      $.addToScene(scene);
+      $$$.push($);
+      fireCount = 5;
+    } else {
+      fireCount--;
+    }
   }
 
   if (document.hasFocus()) {
@@ -136,10 +157,13 @@ function onMouseMove(e) {
   mouse.y = -(event.clientY/window.innerHeight) * 2 + 1;
 }
 
-function onMouseClick(e) {
+function onMouseDown(e) {
   e.preventDefault();
+  isFiring = true;
+  fireCount = 0;
+}
 
-  var $ = new Cash(cannon.position, cannon.rotation);
-  $.addToScene(scene);
-  $$$.push($);
+function onMouseUp(e) {
+  e.preventDefault();
+  isFiring = false;
 }
