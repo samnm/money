@@ -23,7 +23,7 @@ Cash.prototype.addToScene = function(scene) {
   this.mesh.updateMatrixWorld();
   this.velocity = this.mesh.localToWorld(new THREE.Vector3(1, 0, 0));
   this.velocity.setLength(0.5);
-  this.velocity.add(cannonVelocity);
+  this.velocity.addScaledVector(cannonVelocity, 0.5);
 };
 
 Cash.prototype.update = function(t) {
@@ -120,7 +120,6 @@ function render() {
       $$$.splice(i, 1);
     }
   }
-  console.log($$$.length);
 
   if (window.innerWidth != windowWidth || window.innerHeight != windowHeight) {
     resizeRenderer();  
