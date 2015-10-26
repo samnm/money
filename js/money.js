@@ -23,7 +23,7 @@ Cash.prototype.addToScene = function(scene) {
   this.mesh.updateMatrixWorld();
   this.velocity = this.mesh.localToWorld(new THREE.Vector3(1, 0, 0));
   this.velocity.setLength(0.5);
-  this.velocity.add(cannonVelocity);
+  this.velocity.addScaledVector(cannonVelocity, 0.5);
 };
 
 Cash.prototype.update = function(t) {
@@ -60,6 +60,7 @@ function initScene() {
   geometry.scale(1, 0.7, 0.4);
   var material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true, side: THREE.BackSide });
   cannonSphere = new THREE.Mesh(geometry, material);
+  cannonSphere.visible = false;
   scene.add(cannonSphere);
 
   renderer = new THREE.WebGLRenderer();
@@ -80,7 +81,7 @@ function initScene() {
 }
 
 function createCannon() {
-  var cannonMaterial = new THREE.MeshPhongMaterial({ color: 0xA4BD99 });
+  var cannonMaterial = new THREE.MeshPhongMaterial({ color: 0xBD99A4 });
   var cannonMatricies = [
     [2.75,0,0,0,0,0.7,0,0,0,0,1,0,-0.72,0,0,1],
     [0.74,0.18,0,0,-0.34,1.4,0,0,0,0,0.38,0,0.26,-0.81,0,1],
@@ -120,7 +121,6 @@ function render() {
       $$$.splice(i, 1);
     }
   }
-  console.log($$$.length);
 
   if (window.innerWidth != windowWidth || window.innerHeight != windowHeight) {
     resizeRenderer();  
