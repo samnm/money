@@ -57,6 +57,7 @@ function initScene() {
 
   var geometry = new THREE.SphereGeometry(20, 20, 20);
   geometry.translate(0, 0, 0);
+  geometry.scale(1, 0.7, 0.4);
   var material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true, side: THREE.BackSide });
   cannonSphere = new THREE.Mesh(geometry, material);
   scene.add(cannonSphere);
