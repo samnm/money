@@ -38,7 +38,7 @@ Cash.prototype.destroy = function(scene) {
 
 function Cannon() {
   this.velocity = new THREE.Vector3(0, 0, 0);
-  this.rotationalVelocity = new THREE.Vector3(0, 0, 0);
+  this.angularVelocity = new THREE.Vector3(0, 0, 0);
   this.mesh = null;
 };
 
@@ -75,7 +75,14 @@ Cannon.prototype.update = function(t) {
   this.velocity.multiplyScalar(0.75);
   this.mesh.position.add(this.velocity);
 
+  var rotation = this.mesh.rotation.toVector3();
   this.mesh.lookAt(cannonSphere.position);
+  var targetRotation = this.mesh.rotation.toVector3();
+
+  this.angularVelocity.addScaledVector(targetRotation.sub(rotation), 0.1);
+  this.angularVelocity.multiplyScalar(0.75);
+
+  this.mesh.rotation.setFromVector3(rotation.add(this.angularVelocity));
 };
 
 document.addEventListener('DOMContentLoaded', function() {
