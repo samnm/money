@@ -1,5 +1,5 @@
 var scene, camera, renderer;
-var cannon, cannonSphere, cannonVelocity, isFiring, fireCount;
+var cannon, cannonSphere, isFiring, fireCount;
 var windowWidth, windowHeight;
 var mouse, raycaster;
 var $$$ = [];
@@ -23,7 +23,7 @@ Cash.prototype.addToScene = function(scene) {
   this.mesh.updateMatrixWorld();
   this.velocity = this.mesh.localToWorld(new THREE.Vector3(1, 0, 0));
   this.velocity.setLength(0.5);
-  this.velocity.addScaledVector(cannonVelocity, 0.5);
+  this.velocity.addScaledVector(cannon.velocity, 0.5);
 };
 
 Cash.prototype.update = function(t) {
@@ -34,6 +34,47 @@ Cash.prototype.update = function(t) {
 
 Cash.prototype.destroy = function(scene) {
   scene.remove(this.mesh);
+};
+
+function Cannon() {
+  this.velocity = new THREE.Vector3(0, 0, 0);
+  this.rotationalVelocity = new THREE.Vector3(0, 0, 0);
+  this.mesh = null;
+};
+
+Cannon.prototype.addToScene = function(scene) {
+  var cannonMaterial = new THREE.MeshPhongMaterial({ color: 0xBD99A4 });
+  var cannonMatricies = [
+    [2.75,0,0,0,0,0.7,0,0,0,0,1,0,-0.72,0,0,1],
+    [0.74,0.18,0,0,-0.34,1.4,0,0,0,0,0.38,0,0.26,-0.81,0,1],
+    [0.97,0.24,0,0,0,0.17,0,0,0,0,0.62,0,0.46,-1.56,0,1]
+  ];
+  var cannon = new THREE.Object3D();
+  for (var i = 0; i < cannonMatricies.length; i++) {
+    var geometry = new THREE.BoxGeometry(1, 1, 1);
+    var m = new THREE.Matrix4();
+    m.elements = cannonMatricies[i];
+    geometry.applyMatrix(m);
+    cannon.add(new THREE.Mesh(geometry, cannonMaterial));
+  };
+  this.mesh = cannon;
+  scene.add(this.mesh);
+};
+
+Cannon.prototype.update = function(t) {
+  raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObject(cannonSphere, true);
+  if (intersects.length > 0) {
+    var intersect = intersects[ 0 ];
+    var pos = this.mesh.position.clone();
+    this.velocity.addScaledVector(intersect.point.sub(pos), 0.1);
+  }
+
+  this.velocity.multiplyScalar(0.75);
+  this.mesh.position.add(this.velocity);
+
+  this.mesh.lookAt(cannonSphere.position);
+  this.mesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), -Math.PI/2);
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -51,9 +92,8 @@ function initScene() {
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
   camera.position.y = 5;
 
-  cannon = createCannon();
-  scene.add(cannon);
-  cannonVelocity = new THREE.Vector3(0, 0, 0);
+  cannon = new Cannon();
+  cannon.addToScene(scene);
 
   var geometry = new THREE.SphereGeometry(20, 20, 20);
   geometry.translate(0, 0, 0);
@@ -80,37 +120,10 @@ function initScene() {
   window.addEventListener('mouseup', onMouseUp, false);
 }
 
-function createCannon() {
-  var cannonMaterial = new THREE.MeshPhongMaterial({ color: 0xBD99A4 });
-  var cannonMatricies = [
-    [2.75,0,0,0,0,0.7,0,0,0,0,1,0,-0.72,0,0,1],
-    [0.74,0.18,0,0,-0.34,1.4,0,0,0,0,0.38,0,0.26,-0.81,0,1],
-    [0.97,0.24,0,0,0,0.17,0,0,0,0,0.62,0,0.46,-1.56,0,1]
-  ];
-  var cannon = new THREE.Object3D();
-  for (var i = 0; i < cannonMatricies.length; i++) {
-    var geometry = new THREE.BoxGeometry(1, 1, 1);
-    var m = new THREE.Matrix4();
-    m.elements = cannonMatricies[i];
-    geometry.applyMatrix(m);
-    cannon.add(new THREE.Mesh(geometry, cannonMaterial));
-  };
-  return cannon;
-}
-
 function render() {
   requestAnimationFrame(render);
 
-  raycaster.setFromCamera(mouse, camera);
-  var intersects = raycaster.intersectObject(cannonSphere, true);
-  if (intersects.length > 0) {
-    var intersect = intersects[ 0 ];
-    var pos = cannon.position.clone();
-    cannon.position.copy(intersect.point);
-    cannon.lookAt(cannonSphere.position);
-    cannon.rotateOnAxis(new THREE.Vector3(0, 1, 0), -Math.PI/2);
-    cannonVelocity.subVectors(cannon.position, pos);
-  }
+  cannon.update(1.0 / 60.0);
 
   for (var i = $$$.length - 1; i >= 0; i--) {
     var $ = $$$[i];
@@ -123,12 +136,12 @@ function render() {
   }
 
   if (window.innerWidth != windowWidth || window.innerHeight != windowHeight) {
-    resizeRenderer();  
+    resizeRenderer();
   }
 
   if (isFiring) {
     if (fireCount == 0) {
-      var $ = new Cash(cannon.position, cannon.rotation);
+      var $ = new Cash(cannon.mesh.position, cannon.mesh.rotation);
       $.addToScene(scene);
       $$$.push($);
       fireCount = 5;
