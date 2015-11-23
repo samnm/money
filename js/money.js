@@ -12,16 +12,16 @@ function Cash(position, rotation) {
 }
 
 Cash.prototype.addToScene = function(scene) {
-  var geometry = new THREE.BoxGeometry(2.08, 0.01, 0.8);
+  var geometry = new THREE.BoxGeometry(0.8, 0.01, 2.08);
   var material = new THREE.MeshPhongMaterial({ color: 0xA4BD99 });
   this.mesh = new THREE.Mesh(geometry, material);
   this.mesh.position.copy(this.startPosition);
   this.mesh.rotation.copy(this.startRotation);
-  this.mesh.translateX(-1);
+  this.mesh.translateZ(-1);
   scene.add(this.mesh);
 
   this.mesh.updateMatrixWorld();
-  this.velocity = this.mesh.localToWorld(new THREE.Vector3(1, 0, 0));
+  this.velocity = this.mesh.localToWorld(new THREE.Vector3(0, 0, 1));
   this.velocity.setLength(0.5);
   this.velocity.addScaledVector(cannon.velocity, 0.5);
 };
@@ -55,7 +55,9 @@ Cannon.prototype.addToScene = function(scene) {
     var m = new THREE.Matrix4();
     m.elements = cannonMatricies[i];
     geometry.applyMatrix(m);
-    cannon.add(new THREE.Mesh(geometry, cannonMaterial));
+    var part = new THREE.Mesh(geometry, cannonMaterial);
+    part.rotateOnAxis(new THREE.Vector3(0, 1, 0), -Math.PI/2);
+    cannon.add(part);
   };
   this.mesh = cannon;
   scene.add(this.mesh);
@@ -74,7 +76,6 @@ Cannon.prototype.update = function(t) {
   this.mesh.position.add(this.velocity);
 
   this.mesh.lookAt(cannonSphere.position);
-  this.mesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), -Math.PI/2);
 };
 
 document.addEventListener('DOMContentLoaded', function() {
