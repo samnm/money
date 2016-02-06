@@ -152,7 +152,7 @@ function render() {
       var $ = new Cash(cannon.mesh.position, cannon.mesh.rotation);
       $.addToScene(scene);
       $$$.push($);
-      fireCount = 5;
+      fireCount = 3;
     } else {
       fireCount--;
     }
